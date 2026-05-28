@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitives
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+    
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    function isValidRoom(data) {
+      return data.keys().hasAll(['currentStep', 'highestBid'])
+          && data.currentStep is string && data.currentStep.size() <= 20
+          && data.highestBid is number
+          && data.get('highestBidderId', '') is string
+          && data.get('bidderName', '') is string
+          && data.get('currentPlayer', {}) is map
+          && data.get('drawnPlayerNames', []) is list;
+    }
+
+    function isRoomUpdateAction() {
+       return incoming().diff(existing()).affectedKeys().hasOnly(['currentStep', 'highestBid', 'highestBidderId', 'bidderName', 'lastBidTime', 'currentPlayer', 'drawnPlayerNames', 'drawCount', 'passedPlayers']);
+    }
+
+    match /rooms/{roomId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(roomId) && isValidRoom(incoming());
+      allow update: if isSignedIn() && isValidId(roomId) && isValidRoom(incoming()) && isRoomUpdateAction();
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['name', 'budget', 'slots', 'players'])
+          && data.name is string && data.name.size() <= 100
+          && data.budget is number
+          && data.slots is map
+          && data.players is list && data.players.size() <= 5;
+    }
+
+    function isUserUpdateAction() {
+      return incoming().diff(existing()).affectedKeys().hasOnly(['budget', 'slots', 'players']);
+    }
+
+    match /users/{userId} {
+      // Need `isOwner` for secure PII but here name and stats are public in the game
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidUser(incoming());
+      // In a P2P game without a backend server, the host client might need to update other users' squads
+      // Or maybe just let any signed-in user update any other user for this simple app
+      allow update: if isSignedIn() && isValidId(userId) && isValidUser(incoming()) && isUserUpdateAction();
+    }
+  }
+}

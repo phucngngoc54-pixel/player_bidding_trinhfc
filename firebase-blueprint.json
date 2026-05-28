@@ -1,0 +1,74 @@
+{
+  "entities": {
+    "Room": {
+      "title": "Room",
+      "description": "The global auction room",
+      "type": "object",
+      "properties": {
+        "currentStep": {
+          "type": "string",
+          "enum": ["bidding", "call1", "call2", "sold"]
+        },
+        "currentPlayer": {
+          "type": "object",
+          "description": "The current player up for auction"
+        },
+        "highestBid": {
+          "type": "number"
+        },
+        "highestBidderId": {
+          "type": "string"
+        },
+        "bidderName": {
+          "type": "string"
+        },
+        "lastBidTime": {
+          "type": "string",
+          "format": "timestamp"
+        },
+        "drawnPlayerNames": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of player names already drawn"
+        }
+      },
+      "required": ["currentStep", "highestBid"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A bidder in the game",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "budget": {
+          "type": "number"
+        },
+        "slots": {
+          "type": "object",
+          "properties": {
+            "FW": { "type": "number" },
+            "MF": { "type": "number" },
+            "DF": { "type": "number" }
+          }
+        },
+        "players": {
+          "type": "array",
+          "description": "List of signed players"
+        }
+      },
+      "required": ["name", "budget", "slots", "players"]
+    }
+  },
+  "firestore": {
+    "/rooms/{roomId}": {
+      "schema": { "$ref": "#/entities/Room" },
+      "description": "Global auction room (using roomId 'global')"
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles and squad data"
+    }
+  }
+}
