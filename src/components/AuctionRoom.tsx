@@ -23,11 +23,11 @@ interface FallbackPlayer {
   Image: string;
 }
 
-const FW_LIMIT = 20;
-const MF_LIMIT = 20;
-const DF_LIMIT = 10;
-const TOTAL_LIMIT = FW_LIMIT + MF_LIMIT + DF_LIMIT; // 50
-const MARKET_LIMIT = 50;
+const FW_LIMIT = 5;
+const MF_LIMIT = 4;
+const DF_LIMIT = 2;
+const TOTAL_LIMIT = 11; // 11 players limit per person
+const MARKET_LIMIT = 50; // 50 draws limit
 
 const FALLBACK_PLAYERS: FallbackPlayer[] = [
   { Name: "Lionel Messi", Position: "FW", Club: "Inter Miami", Rating: 90, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Lionel_Messi_2018.jpg/500px-Lionel_Messi_2018.jpg" },
