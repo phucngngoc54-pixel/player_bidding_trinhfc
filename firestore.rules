@@ -43,7 +43,7 @@ service cloud.firestore {
           && data.name is string && data.name.size() <= 100
           && data.budget is number
           && data.slots is map
-          && data.players is list && data.players.size() <= 5;
+          && data.players is list && data.players.size() <= 50;
     }
 
     function isUserUpdateAction() {
