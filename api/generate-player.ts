@@ -1,5 +1,3 @@
-import { GoogleGenAI } from "@google/genai";
-
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
@@ -10,7 +8,6 @@ export default async function handler(req: any, res: any) {
     
     // Support Gemini API Key from Vercel Environment Variables
     const apiKey = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || "AIzaSyBipI2shgEo7HjLNor1IReOrl3hJSyEJtQ";
-    const ai = new GoogleGenAI({ apiKey });
     
     const recentDrawnPlayers = drawnPlayerNames.slice(-20);
     
@@ -20,15 +17,26 @@ The player must play in one of these positions: [${neededPositions.join(', ')}].
 Diversity: Mix it up! Pick from various tiers: Elite (e.g., Haaland), Star (e.g., Mac Allister), or Rising/Reliable Pro (e.g., Nico Paz, Joao Pedro).
 Output Format: Return ONLY JSON: {"name": "Full Name", "position": "FW" | "MF" | "DF", "club": "Club Name", "rating": 85-99, "tier": "Elite" | "Star" | "Pro"}. Return ONLY valid JSON, do not use markdown code block formatting.`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-         responseMimeType: "application/json",
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        })
       }
-    });
-    
-    let jsonText = response.text || "{}";
+    );
+
+    if (!response.ok) {
+      throw new Error(`Gemini API returned status ${response.status}`);
+    }
+
+    const data = await response.json();
+    const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
     const aiPlayer = JSON.parse(jsonText);
     const playerName = aiPlayer.name || aiPlayer.Name;
 

@@ -1,7 +1,6 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI } from "@google/genai";
 
 async function startServer() {
   const app = express();
@@ -14,7 +13,6 @@ async function startServer() {
     try {
       const { neededPositions, drawnPlayerNames = [] } = req.body;
       const apiKey = process.env.GEMINI_API_KEY || "AIzaSyBipI2shgEo7HjLNor1IReOrl3hJSyEJtQ";
-      const ai = new GoogleGenAI({ apiKey });
       
       const recentDrawnPlayers = drawnPlayerNames.slice(-20);
       
@@ -24,15 +22,26 @@ The player must play in one of these positions: [${neededPositions.join(', ')}].
 Diversity: Mix it up! Pick from various tiers: Elite (e.g., Haaland), Star (e.g., Mac Allister), or Rising/Reliable Pro (e.g., Nico Paz, Joao Pedro).
 Output Format: Return ONLY JSON: {"name": "Full Name", "position": "FW" | "MF" | "DF", "club": "Club Name", "rating": 85-99, "tier": "Elite" | "Star" | "Pro"}. Return ONLY valid JSON, do not use markdown code block formatting.`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-           responseMimeType: "application/json",
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              responseMimeType: "application/json"
+            }
+          })
         }
-      });
-      
-      let jsonText = response.text || "{}";
+      );
+
+      if (!response.ok) {
+        throw new Error(`Gemini API returned status ${response.status}`);
+      }
+
+      const data = await response.json();
+      const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
       const aiPlayer = JSON.parse(jsonText);
       const playerName = aiPlayer.name || aiPlayer.Name;
 
