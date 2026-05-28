@@ -23,9 +23,6 @@ interface FallbackPlayer {
   Image: string;
 }
 
-const FW_LIMIT = 5;
-const MF_LIMIT = 4;
-const DF_LIMIT = 2;
 const TOTAL_LIMIT = 11; // 11 players limit per person
 const MARKET_LIMIT = 50; // 50 draws limit
 
@@ -321,20 +318,15 @@ function AuctionGame({ uid, name }: { uid: string; name: string }) {
         console.error,
       );
 
-      // Find needed positions across all users
-      const neededPositions = new Set<string>();
-      Object.values(users).forEach((u: any) => {
-        if (u.slots.FW < FW_LIMIT) neededPositions.add("FW");
-        if (u.slots.MF < MF_LIMIT) neededPositions.add("MF");
-        if (u.slots.DF < DF_LIMIT) neededPositions.add("DF");
-      });
-
-      const positionsArray = Array.from(neededPositions);
-      if (positionsArray.length === 0) {
+      // Check if any player still has room for more players
+      const anyoneNeedsPlayers = Object.values(users).some((u: any) => u.players.length < TOTAL_LIMIT);
+      if (!anyoneNeedsPlayers) {
         alert("All squads are full! Game Over.");
         setIsScouting(false);
         return;
       }
+
+      const positionsArray = ["FW", "MF", "DF"];
 
       // Step 1: AI Player Gen (calls our proxy server)
       let aiPlayer;
@@ -428,20 +420,9 @@ function AuctionGame({ uid, name }: { uid: string; name: string }) {
       alert("Not enough budget!");
       return;
     }
-    const pos = player.Position as "FW" | "MF" | "DF";
-    if (pos === "FW" && me.slots.FW >= FW_LIMIT) {
+    if (me.players.length >= TOTAL_LIMIT) {
       playSound("error");
-      alert(`FW slots full! Limit is ${FW_LIMIT}`);
-      return;
-    }
-    if (pos === "MF" && me.slots.MF >= MF_LIMIT) {
-      playSound("error");
-      alert(`MF slots full! Limit is ${MF_LIMIT}`);
-      return;
-    }
-    if (pos === "DF" && me.slots.DF >= DF_LIMIT) {
-      playSound("error");
-      alert(`DF slot full! Limit is ${DF_LIMIT}`);
+      alert(`Squad is full! Limit is ${TOTAL_LIMIT} players`);
       return;
     }
 
@@ -921,55 +902,7 @@ function AuctionGame({ uid, name }: { uid: string; name: string }) {
                         </span>
                       </div>
                     </div>
-                    <div
-                      className={cn(
-                        "flex gap-2 mb-3",
-                        !isMe && totalFilled === 0 && "opacity-50",
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "flex-1 h-6 rounded flex items-center justify-center text-[10px] font-bold border",
-                          u.slots.FW >= FW_LIMIT
-                            ? isMe
-                              ? "bg-green-500 text-black border-green-500"
-                              : "bg-white/20 text-white border-white/10"
-                            : isMe
-                              ? "bg-green-500/20 text-green-400 border-green-500/30"
-                              : "bg-white/10 text-gray-500 border-transparent",
-                        )}
-                      >
-                        FW {u.slots.FW}/{FW_LIMIT}
-                      </div>
-                      <div
-                        className={cn(
-                          "flex-1 h-6 rounded flex items-center justify-center text-[10px] font-bold border",
-                          u.slots.MF >= MF_LIMIT
-                            ? isMe
-                              ? "bg-green-500 text-black border-green-500"
-                              : "bg-white/20 text-white border-white/10"
-                            : isMe
-                              ? "bg-green-500/20 text-green-400 border-green-500/30"
-                              : "bg-white/10 text-gray-500 border-transparent",
-                        )}
-                      >
-                        MF {u.slots.MF}/{MF_LIMIT}
-                      </div>
-                      <div
-                        className={cn(
-                          "flex-1 h-6 rounded flex items-center justify-center text-[10px] font-bold border",
-                          u.slots.DF >= DF_LIMIT
-                            ? isMe
-                              ? "bg-green-500 text-black border-green-500"
-                              : "bg-white/20 text-white border-white/10"
-                            : isMe
-                              ? "bg-green-500/20 text-green-400 border-green-500/30"
-                              : "bg-white/10 text-gray-500 border-transparent",
-                        )}
-                      >
-                        DF {u.slots.DF}/{DF_LIMIT}
-                      </div>
-                    </div>
+                    {/* Position pills removed to allow bidding on any position up to 11 players */}
                     {/* Bought Players List */}
                     {u.players.length > 0 && (
                       <div className="mt-2 pt-2 border-t border-white/5">
@@ -998,8 +931,7 @@ function AuctionGame({ uid, name }: { uid: string; name: string }) {
 
             {Object.values(users).length > 0 &&
               Object.values(users).every(
-                (u: any) =>
-                  u.slots.FW >= FW_LIMIT && u.slots.MF >= MF_LIMIT && u.slots.DF >= DF_LIMIT,
+                (u: any) => u.players.length >= TOTAL_LIMIT,
               ) && (
                 <div className="mt-8 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 p-4 rounded-2xl text-center font-bold text-sm uppercase tracking-widest italic">
                   All players have completed their squads! Game Over!
