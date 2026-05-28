@@ -46,8 +46,9 @@ interface FirestoreErrorInfo {
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errMsg = error instanceof Error ? error.message : String(error);
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: errMsg,
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
@@ -57,5 +58,8 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     path
   };
   console.error('Firestore Error: ', JSON.stringify(errInfo));
+  if (typeof window !== 'undefined') {
+    window.alert(`Firestore Connection Failed!\nOperation: ${operationType}\nPath: ${path}\nError: ${errMsg}\n\nPlease check if you have: \n1. Created a Firestore Database in Firebase Console\n2. Set Firestore Rules to Test Mode (allow read, write: if true;)`);
+  }
   throw new Error(JSON.stringify(errInfo));
 }
