@@ -23,12 +23,27 @@ interface FallbackPlayer {
   Image: string;
 }
 
-const FW_LIMIT = 12;
-const MF_LIMIT = 12;
-const DF_LIMIT = 6;
-const TOTAL_LIMIT = FW_LIMIT + MF_LIMIT + DF_LIMIT; // 30
+const FW_LIMIT = 20;
+const MF_LIMIT = 20;
+const DF_LIMIT = 10;
+const TOTAL_LIMIT = FW_LIMIT + MF_LIMIT + DF_LIMIT; // 50
+const MARKET_LIMIT = 50;
 
 const FALLBACK_PLAYERS: FallbackPlayer[] = [
+  { Name: "Lionel Messi", Position: "FW", Club: "Inter Miami", Rating: 90, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Lionel_Messi_2018.jpg/500px-Lionel_Messi_2018.jpg" },
+  { Name: "Cristiano Ronaldo", Position: "FW", Club: "Al Nassr", Rating: 88, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Cristiano_Ronaldo_2018.jpg/500px-Cristiano_Ronaldo_2018.jpg" },
+  { Name: "Rafael Leao", Position: "FW", Club: "AC Milan", Rating: 89, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Rafael_Leao_2022.jpg/500px-Rafael_Leao_2022.jpg" },
+  { Name: "Rodrygo", Position: "FW", Club: "Real Madrid", Rating: 88, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Rodrygo_2021.jpg/500px-Rodrygo_2021.jpg" },
+  { Name: "Frenkie de Jong", Position: "MF", Club: "Barcelona", Rating: 88, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Frenkie_de_Jong_2022.jpg/500px-Frenkie_de_Jong_2022.jpg" },
+  { Name: "Aurelien Tchouameni", Position: "MF", Club: "Real Madrid", Rating: 87, Tier: "Pro", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Aur%C3%A9lien_Tchouam%C3%A9ni_2022.jpg/500px-Aur%C3%A9lien_Tchouam%C3%A9ni_2022.jpg" },
+  { Name: "Eduardo Camavinga", Position: "MF", Club: "Real Madrid", Rating: 87, Tier: "Pro", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Eduardo_Camavinga_2021.jpg/500px-Eduardo_Camavinga_2021.jpg" },
+  { Name: "Ilkay Gundogan", Position: "MF", Club: "Manchester City", Rating: 88, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/%C4%B0lkay_G%C3%BCndo%C4%9Fan_2024.jpg/500px-%C4%B0lkay_G%C3%BCndo%C4%9Fan_2024.jpg" },
+  { Name: "John Stones", Position: "DF", Club: "Manchester City", Rating: 89, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/John_Stones_2024.jpg/500px-John_Stones_2024.jpg" },
+  { Name: "Marquinhos", Position: "DF", Club: "PSG", Rating: 88, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Marquinhos_2022.jpg/500px-Marquinhos_2022.jpg" },
+  { Name: "Alessandro Bastoni", Position: "DF", Club: "Inter Milan", Rating: 89, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Alessandro_Bastoni_2021.jpg/500px-Alessandro_Bastoni_2021.jpg" },
+  { Name: "Kyle Walker", Position: "DF", Club: "Manchester City", Rating: 86, Tier: "Pro", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Kyle_Walker_2024.jpg/500px-Kyle_Walker_2024.jpg" },
+  { Name: "Ronald Araujo", Position: "DF", Club: "Barcelona", Rating: 88, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Ronald_Ara%C3%BAjo_2022.jpg/500px-Ronald_Ara%C3%BAjo_2022.jpg" },
+  { Name: "Eder Militao", Position: "DF", Club: "Real Madrid", Rating: 87, Tier: "Pro", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/%C3%89der_Milit%C3%A3o_2021.jpg/500px-%C3%89der_Milit%C3%A3o_2021.jpg" },
   { Name: "Erling Haaland", Position: "FW", Club: "Manchester City", Rating: 95, Tier: "Elite", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Erling_Haaland_2023.jpg/500px-Erling_Haaland_2023.jpg" },
   { Name: "Kylian Mbappe", Position: "FW", Club: "Real Madrid", Rating: 96, Tier: "Elite", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Kylian_Mbapp%C3%A9_Vanuatu_crop.jpg/500px-Kylian_Mbapp%C3%A9_Vanuatu_crop.jpg" },
   { Name: "Mohamed Salah", Position: "FW", Club: "Liverpool", Rating: 94, Tier: "Elite", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Mohamed_Salah_2018.jpg/500px-Mohamed_Salah_2018.jpg" },
@@ -540,13 +555,13 @@ function AuctionGame({ uid, name }: { uid: string; name: string }) {
                   <h2 className="text-2xl font-black uppercase italic tracking-widest text-gray-400 mb-6">
                     Waiting for next player...
                   </h2>
-                  {(room?.drawCount || 0) >= 30 ? (
+                  {(room?.drawCount || 0) >= MARKET_LIMIT ? (
                     <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl text-center font-bold text-sm uppercase tracking-widest italic mb-6">
-                      Market Closed: 30/30 Players Scouted
+                      Market Closed: {MARKET_LIMIT}/{MARKET_LIMIT} Players Scouted
                     </div>
                   ) : (
                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-3">
-                      Player Pool: {room?.drawCount || 0}/30
+                      Player Pool: {room?.drawCount || 0}/{MARKET_LIMIT}
                     </div>
                   )}
                   <button
@@ -554,7 +569,7 @@ function AuctionGame({ uid, name }: { uid: string; name: string }) {
                     disabled={
                       isScouting ||
                       room?.currentStep === "scouting" ||
-                      (room?.drawCount || 0) >= 30
+                      (room?.drawCount || 0) >= MARKET_LIMIT
                     }
                     className="px-8 py-3 bg-green-500 hover:bg-green-400 disabled:bg-gray-700 disabled:text-gray-500 text-black rounded-xl font-black italic uppercase transition-all shadow-[0_0_20px_rgba(34,197,94,0.3)]"
                   >
@@ -601,7 +616,7 @@ function AuctionGame({ uid, name }: { uid: string; name: string }) {
                         Current Highest Bid
                       </p>
                       <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest border border-white/10 px-2 py-0.5 rounded bg-white/5">
-                        Player {room?.drawCount || 0}/30
+                        Player {room?.drawCount || 0}/{MARKET_LIMIT}
                       </div>
                     </div>
                     <div className="text-6xl font-black tracking-tighter text-white">
