@@ -14,6 +14,64 @@ import type { AuctionRoom, UserStats, Player } from "../types";
 import { cn, playSound } from "../lib/utils";
 import { Coins, UserSquare2, Trophy, Clock, Swords } from "lucide-react";
 
+interface FallbackPlayer {
+  Name: string;
+  Position: "FW" | "MF" | "DF";
+  Club: string;
+  Rating: number;
+  Tier: "Elite" | "Star" | "Pro";
+  Image: string;
+}
+
+const FW_LIMIT = 12;
+const MF_LIMIT = 12;
+const DF_LIMIT = 6;
+const TOTAL_LIMIT = FW_LIMIT + MF_LIMIT + DF_LIMIT; // 30
+
+const FALLBACK_PLAYERS: FallbackPlayer[] = [
+  { Name: "Erling Haaland", Position: "FW", Club: "Manchester City", Rating: 95, Tier: "Elite", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Erling_Haaland_2023.jpg/500px-Erling_Haaland_2023.jpg" },
+  { Name: "Kylian Mbappe", Position: "FW", Club: "Real Madrid", Rating: 96, Tier: "Elite", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Kylian_Mbapp%C3%A9_Vanuatu_crop.jpg/500px-Kylian_Mbapp%C3%A9_Vanuatu_crop.jpg" },
+  { Name: "Mohamed Salah", Position: "FW", Club: "Liverpool", Rating: 94, Tier: "Elite", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Mohamed_Salah_2018.jpg/500px-Mohamed_Salah_2018.jpg" },
+  { Name: "Robert Lewandowski", Position: "FW", Club: "Barcelona", Rating: 92, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Robert_Lewandowski_2021.jpg/500px-Robert_Lewandowski_2021.jpg" },
+  { Name: "Harry Kane", Position: "FW", Club: "Bayern Munich", Rating: 93, Tier: "Elite", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Harry_Kane_2024.jpg/500px-Harry_Kane_2024.jpg" },
+  { Name: "Vinicius Junior", Position: "FW", Club: "Real Madrid", Rating: 95, Tier: "Elite", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Vinicius_Jr_2021.jpg/500px-Vinicius_Jr_2021.jpg" },
+  { Name: "Bukayo Saka", Position: "FW", Club: "Arsenal", Rating: 91, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Bukayo_Saka_2024.jpg/500px-Bukayo_Saka_2024.jpg" },
+  { Name: "Cole Palmer", Position: "FW", Club: "Chelsea", Rating: 90, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Cole_Palmer_2024.jpg/500px-Cole_Palmer_2024.jpg" },
+  { Name: "Victor Osimhen", Position: "FW", Club: "Galatasaray", Rating: 89, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Victor_Osimhen_2023.jpg/500px-Victor_Osimhen_2023.jpg" },
+  { Name: "Lamine Yamal", Position: "FW", Club: "Barcelona", Rating: 88, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Lamine_Yamal_2024.jpg/500px-Lamine_Yamal_2024.jpg" },
+  { Name: "Antoine Griezmann", Position: "FW", Club: "Atletico Madrid", Rating: 89, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Antoine_Griezmann_2022.jpg/500px-Antoine_Griezmann_2022.jpg" },
+  { Name: "Lautaro Martinez", Position: "FW", Club: "Inter Milan", Rating: 90, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Lautaro_Mart%C3%ADnez_2022.jpg/500px-Lautaro_Mart%C3%ADnez_2022.jpg" },
+  { Name: "Heung-min Son", Position: "FW", Club: "Tottenham", Rating: 89, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Son_Heung-min_2022.jpg/500px-Son_Heung-min_2022.jpg" },
+  { Name: "Ollie Watkins", Position: "FW", Club: "Aston Villa", Rating: 87, Tier: "Pro", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Ollie_Watkins_2024.jpg/500px-Ollie_Watkins_2024.jpg" },
+  { Name: "Alexander Isak", Position: "FW", Club: "Newcastle", Rating: 87, Tier: "Pro", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Alexander_Isak_2022.jpg/500px-Alexander_Isak_2022.jpg" },
+  { Name: "Jude Bellingham", Position: "MF", Club: "Real Madrid", Rating: 94, Tier: "Elite", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Jude_Bellingham_2024.jpg/500px-Jude_Bellingham_2024.jpg" },
+  { Name: "Kevin De Bruyne", Position: "MF", Club: "Manchester City", Rating: 95, Tier: "Elite", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Kevin_De_Bruyne_2018.jpg/500px-Kevin_De_Bruyne_2018.jpg" },
+  { Name: "Rodri", Position: "MF", Club: "Manchester City", Rating: 96, Tier: "Elite", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Rodri_2024.jpg/500px-Rodri_2024.jpg" },
+  { Name: "Declan Rice", Position: "MF", Club: "Arsenal", Rating: 91, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Declan_Rice_2024.jpg/500px-Declan_Rice_2024.jpg" },
+  { Name: "Martin Odegaard", Position: "MF", Club: "Arsenal", Rating: 91, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Martin_%C3%98degaard_2023.jpg/500px-Martin_%C3%98degaard_2023.jpg" },
+  { Name: "Florian Wirtz", Position: "MF", Club: "Bayer Leverkusen", Rating: 92, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Florian_Wirtz_2024.jpg/500px-Florian_Wirtz_2024.jpg" },
+  { Name: "Jamal Musiala", Position: "MF", Club: "Bayern Munich", Rating: 92, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Jamal_Musiala_2024.jpg/500px-Jamal_Musiala_2024.jpg" },
+  { Name: "Bruno Fernandes", Position: "MF", Club: "Manchester United", Rating: 90, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Bruno_Fernandes_2022.jpg/500px-Bruno_Fernandes_2022.jpg" },
+  { Name: "Alexis Mac Allister", Position: "MF", Club: "Liverpool", Rating: 89, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Alexis_Mac_Allister_2022.jpg/500px-Alexis_Mac_Allister_2022.jpg" },
+  { Name: "Federico Valverde", Position: "MF", Club: "Real Madrid", Rating: 90, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Federico_Valverde_2021.jpg/500px-Federico_Valverde_2021.jpg" },
+  { Name: "Bernardo Silva", Position: "MF", Club: "Manchester City", Rating: 90, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Bernardo_Silva_2023.jpg/500px-Bernardo_Silva_2023.jpg" },
+  { Name: "Pedri", Position: "MF", Club: "Barcelona", Rating: 88, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Pedri_2022.jpg/500px-Pedri_2022.jpg" },
+  { Name: "Gavi", Position: "MF", Club: "Barcelona", Rating: 87, Tier: "Pro", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Gavi_2022.jpg/500px-Gavi_2022.jpg" },
+  { Name: "Nico Barella", Position: "MF", Club: "Inter Milan", Rating: 89, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Nicolo_Barella_2023.jpg/500px-Nicolo_Barella_2023.jpg" },
+  { Name: "Kobbie Mainoo", Position: "MF", Club: "Manchester United", Rating: 85, Tier: "Pro", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Kobbie_Mainoo_2024.jpg/500px-Kobbie_Mainoo_2024.jpg" },
+  { Name: "Virgil van Dijk", Position: "DF", Club: "Liverpool", Rating: 94, Tier: "Elite", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Virgil_van_Dijk_2024.jpg/500px-Virgil_van_Dijk_2024.jpg" },
+  { Name: "William Saliba", Position: "DF", Club: "Arsenal", Rating: 91, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/William_Saliba_2024.jpg/500px-William_Saliba_2024.jpg" },
+  { Name: "Ruben Dias", Position: "DF", Club: "Manchester City", Rating: 92, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/R%C3%BAben_Dias_2022.jpg/500px-R%C3%BAben_Dias_2022.jpg" },
+  { Name: "Antonio Rudiger", Position: "DF", Club: "Real Madrid", Rating: 90, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Antonio_R%C3%BCdiger_2021.jpg/500px-Antonio_R%C3%BCdiger_2021.jpg" },
+  { Name: "Trent Alexander-Arnold", Position: "DF", Club: "Liverpool", Rating: 89, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Trent_Alexander-Arnold_2024.jpg/500px-Trent_Alexander-Arnold_2024.jpg" },
+  { Name: "Alphonso Davies", Position: "DF", Club: "Bayern Munich", Rating: 88, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Alphonso_Davies_2024.jpg/500px-Alphonso_Davies_2024.jpg" },
+  { Name: "Theo Hernandez", Position: "DF", Club: "AC Milan", Rating: 88, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Theo_Hern%C3%A1ndez_2022.jpg/500px-Theo_Hern%C3%A1ndez_2022.jpg" },
+  { Name: "Achraf Hakimi", Position: "DF", Club: "PSG", Rating: 89, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Achraf_Hakimi_2022.jpg/500px-Achraf_Hakimi_2022.jpg" },
+  { Name: "Gabriel Magalhaes", Position: "DF", Club: "Arsenal", Rating: 88, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Gabriel_Magalh%C3%A3es_2024.jpg/500px-Gabriel_Magalh%C3%A3es_2024.jpg" },
+  { Name: "Josko Gvardiol", Position: "DF", Club: "Manchester City", Rating: 88, Tier: "Star", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Jo%C5%A1ko_Gvardiol_2022.jpg/500px-Jo%C5%A1ko_Gvardiol_2022.jpg" },
+  { Name: "Micky van de Ven", Position: "DF", Club: "Tottenham", Rating: 86, Tier: "Pro", Image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Micky_van_de_Ven_2024.jpg/500px-Micky_van_de_Ven_2024.jpg" }
+];
+
 export default function AuctionRoomWrapper() {
   const [user, setUser] = useState(auth.currentUser);
 
@@ -251,9 +309,9 @@ function AuctionGame({ uid, name }: { uid: string; name: string }) {
       // Find needed positions across all users
       const neededPositions = new Set<string>();
       Object.values(users).forEach((u: any) => {
-        if (u.slots.FW < 2) neededPositions.add("FW");
-        if (u.slots.MF < 2) neededPositions.add("MF");
-        if (u.slots.DF < 1) neededPositions.add("DF");
+        if (u.slots.FW < FW_LIMIT) neededPositions.add("FW");
+        if (u.slots.MF < MF_LIMIT) neededPositions.add("MF");
+        if (u.slots.DF < DF_LIMIT) neededPositions.add("DF");
       });
 
       const positionsArray = Array.from(neededPositions);
@@ -277,11 +335,31 @@ function AuctionGame({ uid, name }: { uid: string; name: string }) {
         if (!response.ok) throw new Error("Gemini fallback");
         aiPlayer = await response.json();
       } catch (err) {
-        console.error("AI Gen Failed, using fallback list:", err);
+        console.warn("AI Gen Failed, falling back to local player list:", err);
+        
+        // Find all fallback players who match the required positions and haven't been drawn
+        const matchedFallbackPlayers = FALLBACK_PLAYERS.filter(p => 
+          positionsArray.includes(p.Position) && 
+          !(room?.drawnPlayerNames || []).includes(p.Name)
+        );
+
+        if (matchedFallbackPlayers.length > 0) {
+          // Select a random player from the matched fallbacks
+          const randomIdx = Math.floor(Math.random() * matchedFallbackPlayers.length);
+          const chosen = matchedFallbackPlayers[randomIdx];
+          aiPlayer = {
+            name: chosen.Name,
+            position: chosen.Position,
+            imageURL: chosen.Image,
+            club: chosen.Club,
+            rating: chosen.Rating,
+            tier: chosen.Tier
+          };
+        }
       }
 
       if (!aiPlayer) {
-        alert("Could not generate player.");
+        alert("All draft options exhausted! Game Over.");
         setIsScouting(false);
         return;
       }
@@ -336,19 +414,19 @@ function AuctionGame({ uid, name }: { uid: string; name: string }) {
       return;
     }
     const pos = player.Position as "FW" | "MF" | "DF";
-    if (pos === "FW" && me.slots.FW >= 2) {
+    if (pos === "FW" && me.slots.FW >= FW_LIMIT) {
       playSound("error");
-      alert("FW slots full!");
+      alert(`FW slots full! Limit is ${FW_LIMIT}`);
       return;
     }
-    if (pos === "MF" && me.slots.MF >= 2) {
+    if (pos === "MF" && me.slots.MF >= MF_LIMIT) {
       playSound("error");
-      alert("MF slots full!");
+      alert(`MF slots full! Limit is ${MF_LIMIT}`);
       return;
     }
-    if (pos === "DF" && me.slots.DF >= 1) {
+    if (pos === "DF" && me.slots.DF >= DF_LIMIT) {
       playSound("error");
-      alert("DF slot full!");
+      alert(`DF slot full! Limit is ${DF_LIMIT}`);
       return;
     }
 
@@ -824,7 +902,7 @@ function AuctionGame({ uid, name }: { uid: string; name: string }) {
                           Squad Status
                         </span>
                         <span className="text-xs font-bold text-gray-400">
-                          {totalFilled}/5 Filled
+                          {totalFilled}/{TOTAL_LIMIT} Filled
                         </span>
                       </div>
                     </div>
@@ -837,7 +915,7 @@ function AuctionGame({ uid, name }: { uid: string; name: string }) {
                       <div
                         className={cn(
                           "flex-1 h-6 rounded flex items-center justify-center text-[10px] font-bold border",
-                          u.slots.FW >= 2
+                          u.slots.FW >= FW_LIMIT
                             ? isMe
                               ? "bg-green-500 text-black border-green-500"
                               : "bg-white/20 text-white border-white/10"
@@ -846,12 +924,12 @@ function AuctionGame({ uid, name }: { uid: string; name: string }) {
                               : "bg-white/10 text-gray-500 border-transparent",
                         )}
                       >
-                        FW {u.slots.FW}/2
+                        FW {u.slots.FW}/{FW_LIMIT}
                       </div>
                       <div
                         className={cn(
                           "flex-1 h-6 rounded flex items-center justify-center text-[10px] font-bold border",
-                          u.slots.MF >= 2
+                          u.slots.MF >= MF_LIMIT
                             ? isMe
                               ? "bg-green-500 text-black border-green-500"
                               : "bg-white/20 text-white border-white/10"
@@ -860,12 +938,12 @@ function AuctionGame({ uid, name }: { uid: string; name: string }) {
                               : "bg-white/10 text-gray-500 border-transparent",
                         )}
                       >
-                        MF {u.slots.MF}/2
+                        MF {u.slots.MF}/{MF_LIMIT}
                       </div>
                       <div
                         className={cn(
                           "flex-1 h-6 rounded flex items-center justify-center text-[10px] font-bold border",
-                          u.slots.DF >= 1
+                          u.slots.DF >= DF_LIMIT
                             ? isMe
                               ? "bg-green-500 text-black border-green-500"
                               : "bg-white/20 text-white border-white/10"
@@ -874,7 +952,7 @@ function AuctionGame({ uid, name }: { uid: string; name: string }) {
                               : "bg-white/10 text-gray-500 border-transparent",
                         )}
                       >
-                        DF {u.slots.DF}/1
+                        DF {u.slots.DF}/{DF_LIMIT}
                       </div>
                     </div>
                     {/* Bought Players List */}
@@ -906,7 +984,7 @@ function AuctionGame({ uid, name }: { uid: string; name: string }) {
             {Object.values(users).length > 0 &&
               Object.values(users).every(
                 (u: any) =>
-                  u.slots.FW >= 2 && u.slots.MF >= 2 && u.slots.DF >= 1,
+                  u.slots.FW >= FW_LIMIT && u.slots.MF >= MF_LIMIT && u.slots.DF >= DF_LIMIT,
               ) && (
                 <div className="mt-8 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 p-4 rounded-2xl text-center font-bold text-sm uppercase tracking-widest italic">
                   All players have completed their squads! Game Over!
