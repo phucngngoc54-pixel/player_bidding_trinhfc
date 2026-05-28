@@ -31,7 +31,12 @@ export default function AuctionRoomWrapper() {
           Elite <span className="text-green-400">Auction</span> Hub
         </h1>
         <button
-          onClick={() => signInWithPopup(auth, googleProvider)}
+          onClick={() => {
+            signInWithPopup(auth, googleProvider).catch((err) => {
+              console.error("Sign in error: ", err);
+              alert("Sign in failed: " + err.message);
+            });
+          }}
           className="px-8 py-4 bg-green-500 hover:bg-green-400 text-black rounded-xl font-black italic uppercase transition-colors flex items-center gap-2 shadow-[0_0_20px_rgba(34,197,94,0.3)]"
         >
           <UserSquare2 size={24} />
