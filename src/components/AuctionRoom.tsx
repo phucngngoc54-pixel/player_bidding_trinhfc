@@ -70,7 +70,7 @@ function AuctionGame({ uid, name }: { uid: string; name: string }) {
           handleFirestoreError(e, OperationType.CREATE, `users/${uid}`),
         );
       }
-    });
+    }).catch((e) => handleFirestoreError(e, OperationType.GET, `users/${uid}`));
 
     const roomRef = doc(db, "rooms", "global");
     getDocFromServerSafe(roomRef).then(async (snap) => {
@@ -90,7 +90,7 @@ function AuctionGame({ uid, name }: { uid: string; name: string }) {
           handleFirestoreError(e, OperationType.CREATE, `rooms/global`),
         );
       }
-    });
+    }).catch((e) => handleFirestoreError(e, OperationType.GET, `rooms/global`));
 
     // Listeners
     const unsubRoom = onSnapshot(
